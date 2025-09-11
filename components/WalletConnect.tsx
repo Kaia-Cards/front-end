@@ -19,21 +19,27 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onWalletChange, tr
 
   useEffect(() => {
     if (MINI_DAPP_CONFIG.reownProjectId) {
-      createAppKit({
-        projectId: MINI_DAPP_CONFIG.reownProjectId,
-        networks: [{
-          id: 8217,
-          name: 'Kaia',
-          nativeCurrency: { name: 'KAIA', symbol: 'KAIA', decimals: 18 },
-          rpcUrls: { default: { http: ['https://public-node-api.klaytnapi.com/v1/cypress'] } }
-        }],
-        metadata: {
-          name: 'Kaia Cards',
-          description: 'Asian Gift Cards Marketplace',
-          url: window.location.origin,
-          icons: []
-        }
-      });
+      try {
+        createAppKit({
+          projectId: MINI_DAPP_CONFIG.reownProjectId,
+          networks: [{
+            id: 8217,
+            name: 'Kaia',
+            nativeCurrency: { name: 'KAIA', symbol: 'KAIA', decimals: 18 },
+            rpcUrls: { default: { http: ['https://public-node-api.klaytnapi.com/v1/cypress'] } }
+          }],
+          metadata: {
+            name: 'Kaia Cards',
+            description: 'Asian Gift Cards Marketplace',
+            url: window.location.origin,
+            icons: []
+          }
+        });
+      } catch (error) {
+        console.error('Reown AppKit initialization failed:', error);
+      }
+    } else {
+      console.warn('Reown Project ID not configured - using demo wallet connection');
     }
   }, []);
 

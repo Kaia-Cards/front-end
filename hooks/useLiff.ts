@@ -32,11 +32,17 @@ export const useLiff = () => {
         }
       } catch (error) {
         console.error('LIFF initialization failed:', error);
+        setIsLiffReady(true);
+        setIsInLineApp(false);
       }
     };
 
     if (MINI_DAPP_CONFIG.liffId) {
       initializeLiff();
+    } else {
+      setIsLiffReady(true);
+      setIsInLineApp(false);
+      console.warn('LIFF_ID not configured - running in web mode');
     }
   }, []);
 

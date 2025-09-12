@@ -71,8 +71,11 @@ function App() {
 
   const fetchBrands = async () => {
     try {
+      console.log('Fetching brands from:', `${API_BASE}/brands`);
       const response = await fetch(`${API_BASE}/brands`);
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Brands data:', data);
       setBrands(data);
       console.log(`Loaded ${data.length} brands`);
     } catch (error) {
@@ -302,7 +305,9 @@ function App() {
                     </div>
                     
                     <div className="brand-card-body">
-                      <div className="brand-logo">{brand.logo}</div>
+                      <div className="brand-logo">
+                        <img src={brand.logo} alt={brand.name} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+                      </div>
                       <h3 className="brand-name">{brand.name}</h3>
                       <p className="brand-description">{brand.description}</p>
                       
@@ -337,7 +342,9 @@ function App() {
 
               <div className="brand-header">
                 <div className="brand-header-content">
-                  <div className="brand-header-logo">{selectedBrand.logo}</div>
+                  <div className="brand-header-logo">
+                  <img src={selectedBrand.logo} alt={selectedBrand.name} style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
+                </div>
                   <div className="brand-header-info">
                     <h1 className="brand-header-title">{selectedBrand.name}</h1>
                     <p className="brand-header-description">{selectedBrand.description}</p>
@@ -397,7 +404,9 @@ function App() {
                     <div className="checkout-section">
                       <h2 className="checkout-section-title">Order Summary</h2>
                       <div className="order-item">
-                        <div className="order-item-logo">{selectedBrand.logo}</div>
+                        <div className="order-item-logo">
+                          <img src={selectedBrand.logo} alt={selectedBrand.name} style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                        </div>
                         <div className="order-item-details">
                           <h3>{selectedBrand.name} Gift Card</h3>
                           <p>Value: ${selectedCard.value}</p>

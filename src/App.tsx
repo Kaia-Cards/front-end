@@ -529,17 +529,59 @@ function App() {
         <div className="container">
           {currentView === 'shop' && (
             <>
-              <div className="promo-banner">
-                <div className="promo-content">
-                  <h2 className="promo-title">Gift Cards Marketplace</h2>
-                  <button className="line-integration-btn">
-                    LINE Integration
-                  </button>
-                  <p className="promo-subtitle">Pay with USDT</p>
-                  <div className="promo-features">
-                    <span className="promo-feature">✨ Up to 10% Discount</span>
-                    <span className="promo-feature">🎁 1% Cashback</span>
-                    <span className="promo-feature">🚀 Instant Delivery</span>
+              <div className="shop-header">
+                <div className="shop-header-content">
+                  <div className="shop-hero">
+                    <div className="shop-hero-left">
+                      <h1 className="shop-title">Kaia Gift Cards</h1>
+                      <p className="shop-tagline">Discover amazing gift cards from top brands worldwide</p>
+                      <div className="shop-highlights">
+                        <div className="highlight-item">
+                          <span className="highlight-icon">💳</span>
+                          <div className="highlight-text">
+                            <strong>Secure Payments</strong>
+                            <span>Pay with USDT tokens</span>
+                          </div>
+                        </div>
+                        <div className="highlight-item">
+                          <span className="highlight-icon">⚡</span>
+                          <div className="highlight-text">
+                            <strong>Instant Delivery</strong>
+                            <span>Get your codes immediately</span>
+                          </div>
+                        </div>
+                        <div className="highlight-item">
+                          <span className="highlight-icon">🛡️</span>
+                          <div className="highlight-text">
+                            <strong>100% Guaranteed</strong>
+                            <span>Verified and authentic cards</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button className="line-integration-btn">
+                        LINE Integration
+                      </button>
+                    </div>
+                    <div className="shop-hero-right">
+                      <div className="hero-stats">
+                        <div className="stat-card">
+                          <div className="stat-number">50+</div>
+                          <div className="stat-label">Brands Available</div>
+                        </div>
+                        <div className="stat-card">
+                          <div className="stat-number">$USDT Payment</div>
+                        </div>
+                        <div className="stat-card">
+                          <div className="stat-number">99.9%</div>
+                          <div className="stat-label">Uptime</div>
+                        </div>
+                      </div>
+                      <div className="hero-features">
+                        <div className="feature-badge"> Up to 10% Discount</div>
+                        <div className="feature-badge">1% Cashback Rewards</div>
+                        <div className="feature-badge"> Limited Time Offers</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

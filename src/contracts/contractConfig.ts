@@ -19,7 +19,9 @@ export const CONTRACT_CONFIG = {
     'coupang': 'coupang',
     'klook': 'klook',
     'agoda': 'agoda',
-    'kairos': 'testshop' // Special mapping for testnet
+    'kairos': 'testshop', // Special mapping for testnet
+    'tripcom': 'tripcom',
+    'airasia': 'airasia'
   } as const,
   
   // Amount mapping from frontend to contract valid amounts

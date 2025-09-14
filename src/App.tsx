@@ -74,30 +74,44 @@ const SHOPS: Shop[] = [
   {
     id: 'coupang',
     name: 'Coupang',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Coupang_logo.svg/200px-Coupang_logo.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Coupang_logo.svg',
     description: 'South Korea\'s largest online marketplace with fast delivery',
     category: 'E-commerce'
   },
   {
     id: 'klook',
     name: 'Klook',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Klook_logo_%282023%29.svg/200px-Klook_logo_%282023%29.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/71/Klook_logo_%282023%29.svg',
     description: 'Asia\'s leading platform for experiences and travel',
     category: 'Travel'
   },
   {
     id: 'agoda',
     name: 'Agoda',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Agoda_transparent_logo.svg/200px-Agoda_transparent_logo.svg.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/agoda-1.svg',
     description: 'Premier accommodation booking platform in Asia',
     category: 'Travel'
   },
   {
     id: 'kairos',
     name: 'Kairos Testnet',
-    logo: 'https://docs.kaia.io/img/kaia-docs.svg',
+    logo: 'https://cdn.worldvectorlogo.com/logos/kaia.svg',
     description: '🧪 Hackathon Testing Section - For Jury Demo on Kairos Testnet',
     category: 'Testnet'
+  },
+  {
+    id: 'tripcom',
+    name: 'Trip.com',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Trip.com_logo.svg',
+    description: 'Global travel platform for flights, hotels, and travel packages',
+    category: 'Travel'
+  },
+  {
+    id: 'airasia',
+    name: 'AirAsia',
+    logo: 'https://cdn.worldvectorlogo.com/logos/airasia.svg',
+    description: 'Asia\'s leading low-cost airline and travel services',
+    category: 'Travel'
   }
 ];
 
@@ -113,7 +127,7 @@ interface CartItem {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'cart' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda' | 'kairos'>('shop');
+  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'cart' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda' | 'kairos' | 'tripcom' | 'airasia'>('shop');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
@@ -588,7 +602,7 @@ function App() {
 
               <div className="section-header">
                 <h2 className="section-title">Shopping Categories</h2>
-                <span className="results-count">5 popular shopping platforms</span>
+                <span className="results-count">7 popular shopping platforms</span>
               </div>
 
               <div className="shops-grid">
@@ -1049,7 +1063,7 @@ function App() {
           )}
 
           {/* Shop Pages */}
-          {(['rakuten', 'shopee', 'coupang', 'klook', 'agoda', 'kairos'] as const).includes(currentView as any) && (
+          {(['rakuten', 'shopee', 'coupang', 'klook', 'agoda', 'kairos', 'tripcom', 'airasia'] as const).includes(currentView as any) && (
             <div className="shop-detail">
               <div className="breadcrumb">
                 <span onClick={() => setCurrentView('shop')}>Home</span>

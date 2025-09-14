@@ -29,24 +29,13 @@ interface GiftCard {
 
 interface Order {
   orderId: string;
-  brand: string;
-  brandLogo: string;
-  value: number;
-  pricing: {
-    originalValue: number;
-    discountedPrice: number;
-    savings: number;
-    cashback: number;
-    finalPrice: number;
-  };
-  payment: {
-    method: string;
-    amount: number;
-    address: string;
-    network: string;
-  };
-  status: string;
-  expiresAt: string;
+  shopId: string;
+  shopName: string;
+  shopLogo: string;
+  amount: number;
+  price: number;
+  status: 'pending' | 'paid' | 'delivered' | 'received';
+  createdAt: string;
   tx_hash?: string;
   card_code?: string;
 }
@@ -69,35 +58,35 @@ const SHOPS: Shop[] = [
   {
     id: 'rakuten',
     name: 'Rakuten',
-    logo: 'https://logos-world.net/wp-content/uploads/2020/11/Rakuten-Logo.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/rakuten-1.svg',
     description: 'Japan\'s largest e-commerce platform with cashback rewards',
     category: 'E-commerce'
   },
   {
     id: 'shopee',
     name: 'Shopee',
-    logo: 'https://logos-world.net/wp-content/uploads/2020/11/Shopee-Logo.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/shopee-1.svg',
     description: 'Southeast Asia\'s leading online shopping platform',
     category: 'E-commerce'
   },
   {
     id: 'coupang',
     name: 'Coupang',
-    logo: 'https://logos-world.net/wp-content/uploads/2021/02/Coupang-Logo.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/coupang.svg',
     description: 'South Korea\'s largest online marketplace with fast delivery',
     category: 'E-commerce'
   },
   {
     id: 'klook',
     name: 'Klook',
-    logo: 'https://logos-world.net/wp-content/uploads/2022/11/Klook-Logo.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/klook-1.svg',
     description: 'Asia\'s leading platform for experiences and travel',
     category: 'Travel'
   },
   {
     id: 'agoda',
     name: 'Agoda',
-    logo: 'https://logos-world.net/wp-content/uploads/2021/02/Agoda-Logo.png',
+    logo: 'https://cdn.worldvectorlogo.com/logos/agoda-1.svg',
     description: 'Premier accommodation booking platform in Asia',
     category: 'Travel'
   }
@@ -130,6 +119,8 @@ function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -283,6 +274,50 @@ function App() {
     return cartItems.reduce((total, item) => total + item.price, 0);
   };
 
+  const createOrder = (shopId: string, amount: number) => {
+    const shop = SHOPS.find(s => s.id === shopId);
+    if (!shop) return;
+
+    const newOrder: Order = {
+      orderId: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      shopId,
+      shopName: shop.name,
+      shopLogo: shop.logo,
+      amount,
+      price: amount, // 1:1 ratio for USDT
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    setUserOrders(prev => [newOrder, ...prev]);
+    return newOrder;
+  };
+
+  const updateOrderStatus = (orderId: string, status: Order['status'], cardCode?: string) => {
+    setUserOrders(prev => 
+      prev.map(order => 
+        order.orderId === orderId 
+          ? { ...order, status, card_code: cardCode || order.card_code }
+          : order
+      )
+    );
+  };
+
+  const handleConfirmGiftCardReceived = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setShowConfirmModal(true);
+  };
+
+  const confirmGiftCardReceived = () => {
+    if (selectedOrderId) {
+      // Remove the order from the list since it's completed
+      setUserOrders(prev => prev.filter(order => order.orderId !== selectedOrderId));
+      setShowConfirmModal(false);
+      setSelectedOrderId(null);
+      alert('Confirmed! Tokens have been sent to treasury and merchant. Transaction completed.');
+    }
+  };
+
   const filteredBrands = brands.filter(brand => {
     const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           brand.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -408,7 +443,14 @@ function App() {
                     
                     <div className="shop-card-body">
                       <div className="shop-logo">
-                        <img src={shop.logo} alt={shop.name} />
+                        <img 
+                          src={shop.logo} 
+                          alt={shop.name}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60"><rect width="80" height="60" fill="#f8f9fa" stroke="#dee2e6"/><text x="40" y="32" text-anchor="middle" font-family="Arial" font-size="10" fill="#6c757d">${shop.name}</text></svg>`)}`;
+                          }}
+                        />
                       </div>
                       <h3 className="shop-name">{shop.name}</h3>
                       <p className="shop-description">{shop.description}</p>
@@ -711,31 +753,86 @@ function App() {
                       <div className="order-card-header">
                         <span className="order-id">Order #{order.orderId.slice(-8)}</span>
                         <span className={`order-status status-${order.status}`}>
-                          {order.status}
+                          {order.status.toUpperCase()}
                         </span>
                       </div>
                       <div className="order-card-body">
                         <div className="order-info">
-                          <span className="order-logo">{order.brand_logo}</span>
+                          <div className="order-logo">
+                            <img 
+                              src={order.shopLogo} 
+                              alt={order.shopName}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="50" height="40" viewBox="0 0 50 40"><rect width="50" height="40" fill="#f8f9fa" stroke="#dee2e6"/><text x="25" y="22" text-anchor="middle" font-family="Arial" font-size="8" fill="#6c757d">${order.shopName}</text></svg>`)}`;
+                              }}
+                            />
+                          </div>
                           <div className="order-details">
-                            <h3>{order.brand_name}</h3>
-                            <p>Value: ${order.value}</p>
-                            <p>Paid: ${order.price}</p>
+                            <h3>{order.shopName} Gift Card</h3>
+                            <p>Value: ${order.amount} USDT</p>
+                            <p>Price: ${order.price} USDT</p>
+                            <p>Created: {new Date(order.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
+                        
                         {order.card_code && (
                           <div className="order-code">
                             <label>Gift Card Code:</label>
                             <code>{order.card_code}</code>
                           </div>
                         )}
+
+                        <div className="order-actions">
+                          {order.status === 'pending' && (
+                            <div className="order-status-info">
+                              <p>⏳ Waiting for payment confirmation</p>
+                            </div>
+                          )}
+                          
+                          {order.status === 'paid' && (
+                            <div className="order-status-info">
+                              <p>✅ Payment confirmed - Gift card will be delivered soon</p>
+                            </div>
+                          )}
+                          
+                          {order.status === 'delivered' && (
+                            <div className="order-actions-buttons">
+                              <p>📧 Gift card has been delivered!</p>
+                              <button 
+                                className="order-action-btn primary"
+                                onClick={() => updateOrderStatus(order.orderId, 'received')}
+                              >
+                                I've Received My Gift Card
+                              </button>
+                            </div>
+                          )}
+                          
+                          {order.status === 'received' && (
+                            <div className="order-status-info">
+                              <p>🎉 Order completed - Thank you!</p>
+                            </div>
+                          )}
+                          
+                          <div className="order-card-actions">
+                            <button 
+                              className="order-action-btn secondary"
+                              onClick={() => handleConfirmGiftCardReceived(order.orderId)}
+                            >
+                              ✅ I've received my gift card
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="no-orders">
                     <p>No orders found</p>
-                    {userEmail && <p>Start shopping to see your orders here!</p>}
+                    <p>Start shopping to see your orders here!</p>
+                    <button onClick={() => setCurrentView('shop')} className="continue-shopping-btn">
+                      Start Shopping
+                    </button>
                   </div>
                 )}
               </div>
@@ -778,9 +875,9 @@ function App() {
                     </div>
                     <div className="stat-card">
                       <span className="stat-value">
-                        ${userOrders.reduce((sum, o) => sum + o.cashback, 0).toFixed(2)}
+                        {userOrders.filter(o => o.status === 'received').length}
                       </span>
-                      <span className="stat-label">Total Cashback</span>
+                      <span className="stat-label">Cards Received</span>
                     </div>
                   </div>
                 </div>
@@ -800,7 +897,15 @@ function App() {
               <div className="shop-header">
                 <div className="shop-header-content">
                   <div className="shop-header-logo">
-                    <img src={SHOPS.find(s => s.id === currentView)?.logo} alt={SHOPS.find(s => s.id === currentView)?.name} />
+                    <img 
+                      src={SHOPS.find(s => s.id === currentView)?.logo} 
+                      alt={SHOPS.find(s => s.id === currentView)?.name}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        const shopName = SHOPS.find(s => s.id === currentView)?.name || 'Shop';
+                        target.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80"><rect width="120" height="80" fill="#f8f9fa" stroke="#dee2e6"/><text x="60" y="42" text-anchor="middle" font-family="Arial" font-size="12" fill="#6c757d">${shopName}</text></svg>`)}`;
+                      }}
+                    />
                   </div>
                   <div className="shop-header-info">
                     <h1 className="shop-header-title">{SHOPS.find(s => s.id === currentView)?.name}</h1>
@@ -830,12 +935,6 @@ function App() {
                           onClick={() => addToCart(currentView as string, amount)}
                         >
                           Add to Cart 🛒
-                        </button>
-                        <button className="buy-gift-card-btn">
-                          Buy Gift Card
-                        </button>
-                        <button className="received-gift-card-btn">
-                          I've Received My Gift Card
                         </button>
                       </div>
                     </div>
@@ -885,7 +984,14 @@ function App() {
                           </div>
                           <div className="cart-item-price">${item.price} USDT</div>
                           <div className="cart-item-actions">
-                            <button className="buy-now-btn">
+                            <button 
+                              className="buy-now-btn"
+                              onClick={() => {
+                                createOrder(item.shopId, item.amount);
+                                removeFromCart(item.id);
+                                alert(`Order created for ${item.shopName} $${item.amount} gift card! Check your orders page.`);
+                              }}
+                            >
                               Buy Now
                             </button>
                             <button 
@@ -969,6 +1075,53 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Gift Card Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>⚠️ Confirm Gift Card Receipt</h3>
+              <button 
+                className="modal-close"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setSelectedOrderId(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <p><strong>Warning:</strong> By confirming you've received your gift card, you acknowledge that:</p>
+              <ul>
+                <li>You have successfully received the gift card code</li>
+                <li>The gift card is working as expected</li>
+                <li>The tokens will be sent to the treasury and merchant</li>
+                <li>This action cannot be undone</li>
+              </ul>
+              <p>Are you sure you want to continue?</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="modal-btn cancel"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setSelectedOrderId(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="modal-btn confirm"
+                onClick={confirmGiftCardReceived}
+              >
+                Yes, I've received my gift card
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

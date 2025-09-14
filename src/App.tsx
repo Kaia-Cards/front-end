@@ -105,8 +105,17 @@ const SHOPS: Shop[] = [
 
 const GIFT_CARD_AMOUNTS = [10, 50, 100, 200, 500];
 
+interface CartItem {
+  id: string;
+  shopId: string;
+  shopName: string;
+  shopLogo: string;
+  amount: number;
+  price: number;
+}
+
 function App() {
-  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda'>('shop');
+  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'cart' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda'>('shop');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
@@ -118,6 +127,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [cartCount, setCartCount] = useState(0);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
 
@@ -242,6 +252,37 @@ function App() {
     setWalletInfo(wallet);
   };
 
+  const addToCart = (shopId: string, amount: number) => {
+    const shop = SHOPS.find(s => s.id === shopId);
+    if (!shop) return;
+
+    const cartItem: CartItem = {
+      id: `${shopId}-${amount}-${Date.now()}`,
+      shopId,
+      shopName: shop.name,
+      shopLogo: shop.logo,
+      amount,
+      price: amount // 1:1 ratio for USDT
+    };
+
+    setCartItems(prev => [...prev, cartItem]);
+    setCartCount(prev => prev + 1);
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
+    setCartCount(prev => prev - 1);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    setCartCount(0);
+  };
+
+  const getTotalCartPrice = () => {
+    return cartItems.reduce((total, item) => total + item.price, 0);
+  };
+
   const filteredBrands = brands.filter(brand => {
     const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           brand.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -293,7 +334,7 @@ function App() {
                   <span className="action-text">Orders</span>
                 </div>
                 
-                <div className="header-action cart">
+                <div className="header-action cart" onClick={() => setCurrentView('cart')}>
                   <span className="action-icon">🛒</span>
                   <span className="cart-count">{cartCount}</span>
                 </div>
@@ -784,6 +825,12 @@ function App() {
                         <span className="price-amount">${amount} USDT</span>
                       </div>
                       <div className="gift-card-actions">
+                        <button 
+                          className="add-to-cart-btn"
+                          onClick={() => addToCart(currentView as string, amount)}
+                        >
+                          Add to Cart 🛒
+                        </button>
                         <button className="buy-gift-card-btn">
                           Buy Gift Card
                         </button>
@@ -794,6 +841,83 @@ function App() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Cart View */}
+          {currentView === 'cart' && (
+            <div className="cart">
+              <div className="cart-header">
+                <h1 className="cart-title">Shopping Cart</h1>
+                <div className="cart-actions">
+                  {cartItems.length > 0 && (
+                    <button onClick={clearCart} className="clear-cart-btn">
+                      Clear Cart
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="cart-content">
+                {cartItems.length === 0 ? (
+                  <div className="empty-cart">
+                    <div className="empty-cart-icon">🛒</div>
+                    <h3>Your cart is empty</h3>
+                    <p>Add some gift cards to get started!</p>
+                    <button onClick={() => setCurrentView('shop')} className="continue-shopping-btn">
+                      Continue Shopping
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="cart-items">
+                      {cartItems.map(item => (
+                        <div key={item.id} className="cart-item">
+                          <div className="cart-item-info">
+                            <div className="cart-item-logo">{item.shopLogo}</div>
+                            <div className="cart-item-details">
+                              <h3>{item.shopName} Gift Card</h3>
+                              <p>Value: ${item.amount} USDT</p>
+                            </div>
+                          </div>
+                          <div className="cart-item-price">${item.price} USDT</div>
+                          <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="remove-item-btn"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="cart-summary">
+                      <div className="cart-total">
+                        <div className="total-row">
+                          <span>Subtotal ({cartItems.length} items)</span>
+                          <span className="total-price">${getTotalCartPrice()} USDT</span>
+                        </div>
+                        <div className="total-row final">
+                          <span>Total</span>
+                          <span className="total-price">${getTotalCartPrice()} USDT</span>
+                        </div>
+                      </div>
+                      
+                      <div className="cart-checkout-actions">
+                        <button className="checkout-all-btn">
+                          Checkout All Items
+                        </button>
+                        <button 
+                          onClick={() => setCurrentView('shop')} 
+                          className="continue-shopping-btn"
+                        >
+                          Continue Shopping
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

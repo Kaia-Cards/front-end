@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { WalletConnect } from '../components/WalletConnect';
+import { contractService } from './contracts/contractService';
+import { ShopId, FrontendAmount } from './contracts/contractConfig';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -128,6 +130,8 @@ function App() {
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [contractInitialized, setContractInitialized] = useState(false);
+  const [pendingPurchases, setPendingPurchases] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     fetchBrands();
@@ -246,8 +250,17 @@ function App() {
     }
   };
 
-  const handleWalletChange = (wallet: WalletInfo | null) => {
+  const handleWalletChange = async (wallet: WalletInfo | null) => {
     setWalletInfo(wallet);
+    
+    // Initialize contract when wallet is connected
+    if (wallet && !contractInitialized) {
+      try {
+        await initializeContract();
+      } catch (error) {
+        console.error('Failed to initialize contract on wallet connect:', error);
+      }
+    }
   };
 
   const addToCart = (shopId: string, amount: number) => {
@@ -310,18 +323,113 @@ function App() {
     );
   };
 
+  const confirmGiftCardDelivery = async (orderId: string) => {
+    try {
+      if (!contractInitialized) {
+        alert('Contract not initialized. Please reconnect your wallet.');
+        return;
+      }
+
+      setLoading(true);
+      console.log('Confirming gift card delivery for purchase ID:', orderId);
+      
+      // Call the smart contract to confirm delivery
+      await contractService.confirmGiftCardDelivery(orderId);
+      
+      // Update frontend status after successful blockchain confirmation
+      updateOrderStatus(orderId, 'received');
+      
+      alert('🎉 Gift card delivery confirmed on blockchain! Tokens have been sent to treasury.');
+    } catch (error: any) {
+      console.error('Failed to confirm delivery:', error);
+      alert(`❌ Failed to confirm delivery: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConfirmGiftCardReceived = (orderId: string) => {
     setSelectedOrderId(orderId);
     setShowConfirmModal(true);
   };
 
-  const confirmGiftCardReceived = () => {
+  const confirmGiftCardReceived = async () => {
     if (selectedOrderId) {
-      // Remove the order from the list since it's completed
-      setUserOrders(prev => prev.filter(order => order.orderId !== selectedOrderId));
-      setShowConfirmModal(false);
-      setSelectedOrderId(null);
-      alert('Confirmed! Tokens have been sent to treasury and merchant. Transaction completed.');
+      try {
+        // Call smart contract to confirm delivery
+        if (contractInitialized) {
+          await contractService.confirmGiftCardDelivery(selectedOrderId);
+        }
+        
+        // Remove the order from the list since it's completed
+        setUserOrders(prev => prev.filter(order => order.orderId !== selectedOrderId));
+        setShowConfirmModal(false);
+        setSelectedOrderId(null);
+        alert('Confirmed! Tokens have been sent to treasury and merchant. Transaction completed.');
+      } catch (error: any) {
+        console.error('Failed to confirm delivery:', error);
+        alert(`Failed to confirm delivery: ${error.message}`);
+      }
+    }
+  };
+
+  // Initialize contract when wallet is connected
+  const initializeContract = async () => {
+    try {
+      await contractService.initialize();
+      setContractInitialized(true);
+      console.log('Contract service initialized successfully');
+    } catch (error: any) {
+      console.error('Failed to initialize contract:', error);
+      alert(`Failed to connect to contract: ${error.message}`);
+      setContractInitialized(false);
+    }
+  };
+
+  // Handle buying gift card through smart contract
+  const buyGiftCardOnChain = async (shopId: string, amount: number) => {
+    try {
+      if (!contractInitialized) {
+        console.log('Contract not initialized, initializing now...');
+        await initializeContract();
+      }
+
+      if (!contractInitialized) {
+        throw new Error('Failed to initialize contract. Please try connecting your wallet again.');
+      }
+
+      setLoading(true);
+      
+      // Call the smart contract
+      const purchaseId = await contractService.buyGiftCard(shopId as ShopId, amount as FrontendAmount);
+      
+      // Store the purchase ID for tracking
+      const cartItemId = `${shopId}-${amount}`;
+      setPendingPurchases(prev => new Map(prev).set(cartItemId, purchaseId));
+      
+      // Create order in frontend state with purchase ID
+      const shop = SHOPS.find(s => s.id === shopId);
+      if (shop) {
+        const newOrder: Order = {
+          orderId: purchaseId, // Use blockchain purchase ID
+          shopId,
+          shopName: shop.name,
+          shopLogo: shop.logo,
+          amount,
+          price: amount,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          tx_hash: purchaseId // Store purchase ID as transaction hash
+        };
+        setUserOrders(prev => [newOrder, ...prev]);
+      }
+
+      return purchaseId;
+    } catch (error: any) {
+      console.error('Error buying gift card:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -809,9 +917,10 @@ function App() {
                               <p>📧 Gift card has been delivered!</p>
                               <button 
                                 className="order-action-btn primary"
-                                onClick={() => updateOrderStatus(order.orderId, 'received')}
+                                onClick={() => confirmGiftCardDelivery(order.orderId)}
+                                disabled={loading}
                               >
-                                I've Received My Gift Card
+                                {loading ? 'Confirming...' : "I've Received My Gift Card"}
                               </button>
                             </div>
                           )}
@@ -994,13 +1103,28 @@ function App() {
                           <div className="cart-item-actions">
                             <button 
                               className="buy-now-btn"
-                              onClick={() => {
-                                createOrder(item.shopId, item.amount);
-                                removeFromCart(item.id);
-                                alert(`Order created for ${item.shopName} $${item.amount} gift card! Check your orders page.`);
+                              onClick={async () => {
+                                try {
+                                  if (!walletInfo) {
+                                    alert('Please connect your wallet first');
+                                    return;
+                                  }
+                                  
+                                  // Call smart contract to buy gift card
+                                  const purchaseId = await buyGiftCardOnChain(item.shopId, item.amount);
+                                  
+                                  // Remove item from cart after successful purchase
+                                  removeFromCart(item.id);
+                                  
+                                  alert(`🎉 Gift card purchased successfully! Purchase ID: ${purchaseId.slice(0, 10)}... Check your orders page.`);
+                                } catch (error: any) {
+                                  console.error('Purchase failed:', error);
+                                  alert(`❌ Purchase failed: ${error.message}`);
+                                }
                               }}
+                              disabled={loading}
                             >
-                              Buy Now
+                              {loading ? 'Processing...' : 'Buy Now'}
                             </button>
                             <button 
                               onClick={() => removeFromCart(item.id)}

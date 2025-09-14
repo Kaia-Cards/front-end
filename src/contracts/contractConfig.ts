@@ -1,7 +1,7 @@
 // Contract configuration for KaiaGiftCardMarketplace
 export const CONTRACT_CONFIG = {
   // Contract address 
-  address: process.env.REACT_APP_CONTRACT_ADDRESS || '0xe47BcF7103bBc8d1DDD75f2Ab6813da050443D2c',
+  address: process.env.REACT_APP_CONTRACT_ADDRESS || '0x4bc0c8795ee934e59939EeD8Ca31859564B9a5Cf',
   
   // Payment token address (testnet token)
   paymentTokenAddress: process.env.REACT_APP_PAYMENT_TOKEN_ADDRESS || '0x1577dE52bF5D6a7f455FC19d87c728d4bE3e1377',

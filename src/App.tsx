@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { WalletConnect } from '../components/WalletConnect';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -50,6 +51,12 @@ interface Order {
   card_code?: string;
 }
 
+interface WalletInfo {
+  address: string;
+  balance: string;
+  network: string;
+}
+
 function App() {
   const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile'>('shop');
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -64,6 +71,7 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [cartCount, setCartCount] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -182,6 +190,10 @@ function App() {
     }
   };
 
+  const handleWalletChange = (wallet: WalletInfo | null) => {
+    setWalletInfo(wallet);
+  };
+
   const filteredBrands = brands.filter(brand => {
     const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           brand.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -221,6 +233,8 @@ function App() {
               </div>
               
               <div className="header-actions">
+                <WalletConnect onWalletChange={handleWalletChange} translations={{}} />
+                
                 <div className="header-action" onClick={() => setCurrentView('profile')}>
                   <span className="action-icon">👤</span>
                   <span className="action-text">Account</span>

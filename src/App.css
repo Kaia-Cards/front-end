@@ -3050,6 +3050,45 @@ body {
   margin-bottom: 0;
 }
 
+/* Added to Cart Modal Styles */
+.added-to-cart-modal .success-content {
+  text-align: center;
+}
+
+.added-to-cart-modal .success-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.added-to-cart-modal h4 {
+  color: var(--kaia-text);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.item-details {
+  background: var(--kaia-gray);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.cart-info {
+  margin-top: 20px;
+}
+
+.cart-info p {
+  color: var(--kaia-text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.cart-info p:last-child {
+  margin-bottom: 0;
+}
+
 /* Testnet Special Styling */
 .shop-card[data-category="Testnet"] {
   border: 2px solid var(--kaia-lime);

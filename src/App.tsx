@@ -137,6 +137,8 @@ function App() {
   const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
   const [showDeliveryConfirmedModal, setShowDeliveryConfirmedModal] = useState(false);
   const [confirmedOrderData, setConfirmedOrderData] = useState<{shopName: string, amount: number} | null>(null);
+  const [showAddedToCartModal, setShowAddedToCartModal] = useState(false);
+  const [addedToCartData, setAddedToCartData] = useState<{shopName: string, amount: number} | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -283,6 +285,13 @@ function App() {
 
     setCartItems(prev => [...prev, cartItem]);
     setCartCount(prev => prev + 1);
+    
+    // Show success modal
+    setAddedToCartData({
+      shopName: shop.name,
+      amount: amount
+    });
+    setShowAddedToCartModal(true);
   };
 
   const removeFromCart = (itemId: string) => {
@@ -522,8 +531,8 @@ function App() {
             <>
               <div className="promo-banner">
                 <div className="promo-content">
-                  <h2 className="promo-title">Asian Gift Cards Marketplace</h2>
-                  <p className="promo-subtitle">Powered by Kaia Blockchain • Pay with USDT</p>
+                  <h2 className="promo-title">Gift Cards Marketplace</h2>
+                  <p className="promo-subtitle">Pay with USDT</p>
                   <div className="promo-features">
                     <span className="promo-feature">✨ Up to 10% Discount</span>
                     <span className="promo-feature">🎁 1% Cashback</span>
@@ -909,7 +918,7 @@ function App() {
                               <p>📧 Gift card has been delivered!</p>
                               <button 
                                 className="order-action-btn primary"
-                                onClick={() => confirmGiftCardDelivery(order.orderId)}
+                                onClick={() => handleConfirmGiftCardReceived(order.orderId)}
                                 disabled={loading}
                               >
                                 {loading ? 'Confirming...' : "I've Received My Gift Card"}
@@ -1189,7 +1198,7 @@ function App() {
           <div className="footer-content">
             <div className="footer-section">
               <h3 className="footer-title">KaiaCards</h3>
-              <p className="footer-text">Your trusted Asian gift cards marketplace on Kaia blockchain</p>
+              <p className="footer-text">Your trusted gift cards marketplace</p>
             </div>
             
             <div className="footer-section">
@@ -1218,7 +1227,7 @@ function App() {
           </div>
           
           <div className="footer-bottom">
-            <p>© 2025 KaiaCards. Powered by Kaia Blockchain.</p>
+            <p>© 2025 KaiaCards.</p>
           </div>
         </div>
       </footer>
@@ -1397,6 +1406,69 @@ function App() {
                 }}
               >
                 Perfect!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Added to Cart Modal */}
+      {showAddedToCartModal && addedToCartData && (
+        <div className="modal-overlay">
+          <div className="modal-content added-to-cart-modal">
+            <div className="modal-header">
+              <h3>🛒 Added to Cart!</h3>
+              <button 
+                className="modal-close"
+                onClick={() => {
+                  setShowAddedToCartModal(false);
+                  setAddedToCartData(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="success-content">
+                <div className="success-icon">✅</div>
+                <h4>Item successfully added to your cart!</h4>
+                
+                <div className="item-details">
+                  <div className="detail-item">
+                    <span className="label">Shop:</span>
+                    <span className="value">{addedToCartData.shopName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">Amount:</span>
+                    <span className="value">${addedToCartData.amount} USDT</span>
+                  </div>
+                </div>
+
+                <div className="cart-info">
+                  <p>🛍️ Your item is ready for purchase!</p>
+                  <p>💡 Go to Cart to complete your purchase with tokens</p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="modal-btn secondary"
+                onClick={() => {
+                  setShowAddedToCartModal(false);
+                  setAddedToCartData(null);
+                }}
+              >
+                Continue Shopping
+              </button>
+              <button 
+                className="modal-btn primary"
+                onClick={() => {
+                  setShowAddedToCartModal(false);
+                  setAddedToCartData(null);
+                  setCurrentView('cart');
+                }}
+              >
+                View Cart
               </button>
             </div>
           </div>

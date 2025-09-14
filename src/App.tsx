@@ -72,23 +72,30 @@ const SHOPS: Shop[] = [
   {
     id: 'coupang',
     name: 'Coupang',
-    logo: 'https://cdn.worldvectorlogo.com/logos/coupang.svg',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Coupang_logo.svg/200px-Coupang_logo.svg.png',
     description: 'South Korea\'s largest online marketplace with fast delivery',
     category: 'E-commerce'
   },
   {
     id: 'klook',
     name: 'Klook',
-    logo: 'https://cdn.worldvectorlogo.com/logos/klook-1.svg',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Klook_logo_%282023%29.svg/200px-Klook_logo_%282023%29.svg.png',
     description: 'Asia\'s leading platform for experiences and travel',
     category: 'Travel'
   },
   {
     id: 'agoda',
     name: 'Agoda',
-    logo: 'https://cdn.worldvectorlogo.com/logos/agoda-1.svg',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Agoda_transparent_logo.svg/200px-Agoda_transparent_logo.svg.png',
     description: 'Premier accommodation booking platform in Asia',
     category: 'Travel'
+  },
+  {
+    id: 'kairos',
+    name: 'Kairos Testnet',
+    logo: 'https://docs.kaia.io/img/kaia-docs.svg',
+    description: '🧪 Hackathon Testing Section - For Jury Demo on Kairos Testnet',
+    category: 'Testnet'
   }
 ];
 
@@ -104,7 +111,7 @@ interface CartItem {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'cart' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda'>('shop');
+  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'cart' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda' | 'kairos'>('shop');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
@@ -435,6 +442,7 @@ function App() {
                   <div 
                     key={shop.id} 
                     className="shop-card"
+                    data-category={shop.category}
                     onClick={() => setCurrentView(shop.id as any)}
                   >
                     <div className="shop-card-header">
@@ -886,7 +894,7 @@ function App() {
           )}
 
           {/* Shop Pages */}
-          {(['rakuten', 'shopee', 'coupang', 'klook', 'agoda'] as const).includes(currentView as any) && (
+          {(['rakuten', 'shopee', 'coupang', 'klook', 'agoda', 'kairos'] as const).includes(currentView as any) && (
             <div className="shop-detail">
               <div className="breadcrumb">
                 <span onClick={() => setCurrentView('shop')}>Home</span>
@@ -894,7 +902,7 @@ function App() {
                 <span className="breadcrumb-current">{SHOPS.find(s => s.id === currentView)?.name}</span>
               </div>
 
-              <div className="shop-header">
+              <div className="shop-header" data-shop={currentView}>
                 <div className="shop-header-content">
                   <div className="shop-header-logo">
                     <img 

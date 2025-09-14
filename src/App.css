@@ -2839,3 +2839,42 @@ body {
     width: 100%;
   }
 }
+
+/* Testnet Special Styling */
+.shop-card[data-category="Testnet"] {
+  border: 2px solid var(--kaia-lime);
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+  position: relative;
+}
+
+.shop-card[data-category="Testnet"]::before {
+  content: "🧪 TESTNET";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--kaia-lime);
+  color: var(--kaia-black);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.shop-card[data-category="Testnet"] .shop-name {
+  color: #059669;
+}
+
+.shop-card[data-category="Testnet"] .shop-description {
+  color: #047857;
+  font-weight: 500;
+}
+
+.shop-header[data-shop="kairos"] {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+  border-left: 4px solid var(--kaia-lime);
+}
+
+.shop-header[data-shop="kairos"] .shop-header-title {
+  color: #059669;
+}

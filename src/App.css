@@ -3089,6 +3089,33 @@ body {
   margin-bottom: 0;
 }
 
+/* LINE Integration Button */
+.line-integration-btn {
+  background: var(--kaia-lime);
+  color: var(--kaia-black);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 16px 0;
+  transition: var(--transition);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.line-integration-btn:hover {
+  background: var(--kaia-lime-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 25px rgba(0, 255, 136, 0.4);
+}
+
+.line-integration-btn:active {
+  transform: translateY(0);
+}
+
 /* Testnet Special Styling */
 .shop-card[data-category="Testnet"] {
   border: 2px solid var(--kaia-lime);

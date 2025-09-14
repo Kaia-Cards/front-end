@@ -532,6 +532,9 @@ function App() {
               <div className="promo-banner">
                 <div className="promo-content">
                   <h2 className="promo-title">Gift Cards Marketplace</h2>
+                  <button className="line-integration-btn">
+                    LINE Integration
+                  </button>
                   <p className="promo-subtitle">Pay with USDT</p>
                   <div className="promo-features">
                     <span className="promo-feature">✨ Up to 10% Discount</span>

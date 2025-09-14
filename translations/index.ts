@@ -10,8 +10,8 @@ export const translations = {
       orders: 'Orders'
     },
     shop: {
-      title: 'Popular Brands',
-      subtitle: 'Powered by Kaia Blockchain • Pay with USDT',
+      title: 'Gift Card Marketplace',
+      subtitle: 'Pay with USDT',
       features: {
         discount: 'Up to 10% Discount',
         cashback: '1% Cashback',

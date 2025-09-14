@@ -1,0 +1,36 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #1a1a1a; }
+      .primary { fill: #00ff41; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="128" height="128" class="bg"/>
+
+  <!-- Gift box outline -->
+  <path d="M20 35 C20 25, 25 20, 35 20 L93 20 C103 20, 108 25, 108 35 L108 93 C108 103, 103 108, 93 108 L35 108 C25 108, 20 103, 20 93 Z"
+        fill="none"
+        stroke="#00ff41"
+        stroke-width="6"/>
+
+  <!-- Bow on top -->
+  <path d="M50 20 C50 15, 45 10, 40 15 C35 10, 30 15, 35 20 C40 15, 45 15, 50 20"
+        class="primary"/>
+  <path d="M78 20 C78 15, 83 10, 88 15 C93 10, 98 15, 93 20 C88 15, 83 15, 78 20"
+        class="primary"/>
+  <rect x="60" y="10" width="8" height="30" class="primary" rx="4"/>
+
+  <!-- Letter K -->
+  <g class="primary">
+    <!-- Vertical line of K -->
+    <rect x="45" y="45" width="8" height="38" rx="2"/>
+
+    <!-- Upper diagonal of K -->
+    <rect x="53" y="50" width="20" height="6" rx="3" transform="rotate(25 53 53)"/>
+
+    <!-- Lower diagonal of K -->
+    <rect x="53" y="72" width="20" height="6" rx="3" transform="rotate(-25 53 75)"/>
+  </g>
+</svg>

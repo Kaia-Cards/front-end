@@ -8,6 +8,7 @@ import { WalletConnect } from './components/WalletConnect';
 import { LanguageSelector } from './components/LanguageSelector';
 import { MaintenanceMode } from './components/MaintenanceMode';
 import { CloseConfirmDialog } from './components/CloseConfirmDialog';
+import { LineQRCode } from './components/LineQRCode';
 import { PAYMENT_CONFIG } from './config/miniDapp';
 
 const API_BASE = 'http://localhost:3001/api';
@@ -66,7 +67,7 @@ interface WalletInfo {
 }
 
 function App() {
-  const { isLiffReady, isLoggedIn, liffUser, isInLineApp } = useLiff();
+  const { isLiffReady, isLoggedIn, liffUser, isInLineApp, login } = useLiff();
   const { currentLanguage } = useLanguage();
   
   const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile'>('shop');
@@ -254,8 +255,8 @@ function App() {
               </button>
               
               <div className="logo" onClick={() => setCurrentView('shop')}>
-                <span className="logo-text">{t.app.title}</span>
-                <span className="logo-cards">CARDS</span>
+                <span className="logo-text">K</span>
+                <span className="logo-cards">SHOP</span>
               </div>
               
               <div className="search-bar">
@@ -273,23 +274,23 @@ function App() {
               
               <div className="header-actions">
                 <LanguageSelector />
-                
-                <WalletConnect onWalletChange={handleWalletChange} translations={t} />
-                
+
                 <div className="header-action" onClick={() => setCurrentView('profile')}>
                   <span className="action-icon">👤</span>
                   <span className="action-text">{t.header.account}</span>
                 </div>
-                
+
                 <div className="header-action" onClick={() => setCurrentView('orders')}>
                   <span className="action-icon">📦</span>
                   <span className="action-text">{t.header.orders}</span>
                 </div>
-                
+
                 <div className="header-action cart">
                   <span className="action-icon">🛒</span>
                   <span className="cart-count">{cartCount}</span>
                 </div>
+
+                <WalletConnect onWalletChange={handleWalletChange} translations={t} />
                 
                 {isInLineApp && (
                   <div className="header-action" onClick={handleCloseRequest}>
@@ -344,6 +345,45 @@ function App() {
                     <span className="promo-feature">✨ {t.shop.features.discount}</span>
                     <span className="promo-feature">🎁 {t.shop.features.cashback}</span>
                     <span className="promo-feature">🚀 {t.shop.features.delivery}</span>
+                  </div>
+                  <div className="line-integration">
+                    {!isLoggedIn ? (
+                      <button
+                        className="line-integration-btn"
+                        onClick={() => {
+                          if (isLiffReady) {
+                            if (isInLineApp) {
+                              login();
+                            } else {
+                              const liffUrl = `https://liff.line.me/N68c2274b8c15d9156dd6c864`;
+                              alert(`To use LINE integration, please open this app in the LINE browser:\n\n${liffUrl}\n\nOr scan the QR code in LINE to add this LIFF app.`);
+                            }
+                          } else {
+                            alert('LINE integration is initializing. Please try again in a moment.');
+                          }
+                        }}
+                        disabled={!isLiffReady}
+                      >
+                        {isInLineApp ? 'Login with LINE' : 'Open in LINE'}
+                      </button>
+                    ) : (
+                      <div className="line-user-info">
+                        <div className="line-user-avatar">
+                          {liffUser?.pictureUrl ? (
+                            <img src={liffUser.pictureUrl} alt={liffUser.displayName} className="user-avatar" />
+                          ) : (
+                            <div className="user-avatar-placeholder">👤</div>
+                          )}
+                        </div>
+                        <div className="line-user-details">
+                          <span className="line-user-name">Welcome, {liffUser?.displayName}!</span>
+                          <span className="line-user-status">Connected via LINE</span>
+                        </div>
+                      </div>
+                    )}
+                    {!isInLineApp && (
+                      <LineQRCode liffId="N68c2274b8c15d9156dd6c864" />
+                    )}
                   </div>
                 </div>
               </div>

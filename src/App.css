@@ -2006,9 +2006,18 @@ body {
 }
 
 .shop-logo {
-  font-size: 48px;
-  margin-bottom: 12px;
-  line-height: 1;
+  width: 80px;
+  height: 60px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .shop-name {
@@ -2063,9 +2072,18 @@ body {
 }
 
 .shop-header-logo {
-  font-size: 64px;
+  width: 120px;
+  height: 80px;
   flex-shrink: 0;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-header-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .shop-header-info {
@@ -2282,8 +2300,18 @@ body {
 }
 
 .cart-item-logo {
-  font-size: 32px;
+  width: 48px;
+  height: 36px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-item-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .cart-item-details h3 {
@@ -2302,7 +2330,30 @@ body {
   font-size: 18px;
   font-weight: 700;
   color: var(--kaia-lime);
-  margin-right: 16px;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.buy-now-btn {
+  padding: 8px 16px;
+  background: var(--kaia-lime);
+  color: var(--kaia-black);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.buy-now-btn:hover {
+  background: var(--kaia-lime-light);
+  transform: translateY(-1px);
 }
 
 .remove-item-btn {
@@ -2386,8 +2437,19 @@ body {
   transition: var(--transition);
 }
 
-.checkout-all-btn:hover {
-  background: var(--kaia-lime-light);
+.cart-info {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.cart-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--kaia-text-secondary);
+  text-align: center;
 }
 
 /* Add to Cart Button */
@@ -2432,16 +2494,32 @@ body {
   
   .cart-item {
     padding: 16px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
   
   .cart-item-info {
-    flex-basis: 100%;
-    margin-bottom: 8px;
+    width: 100%;
   }
   
   .cart-item-price {
-    margin-right: 8px;
+    align-self: flex-start;
+  }
+  
+  .cart-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .shop-header-logo {
+    width: 80px;
+    height: 60px;
+  }
+  
+  .shop-logo {
+    width: 60px;
+    height: 45px;
   }
   
   .cart-header {

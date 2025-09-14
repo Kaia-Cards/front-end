@@ -69,35 +69,35 @@ const SHOPS: Shop[] = [
   {
     id: 'rakuten',
     name: 'Rakuten',
-    logo: '🛒',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/11/Rakuten-Logo.png',
     description: 'Japan\'s largest e-commerce platform with cashback rewards',
     category: 'E-commerce'
   },
   {
     id: 'shopee',
     name: 'Shopee',
-    logo: '🛍️',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/11/Shopee-Logo.png',
     description: 'Southeast Asia\'s leading online shopping platform',
     category: 'E-commerce'
   },
   {
     id: 'coupang',
     name: 'Coupang',
-    logo: '📦',
+    logo: 'https://logos-world.net/wp-content/uploads/2021/02/Coupang-Logo.png',
     description: 'South Korea\'s largest online marketplace with fast delivery',
     category: 'E-commerce'
   },
   {
     id: 'klook',
     name: 'Klook',
-    logo: '✈️',
+    logo: 'https://logos-world.net/wp-content/uploads/2022/11/Klook-Logo.png',
     description: 'Asia\'s leading platform for experiences and travel',
     category: 'Travel'
   },
   {
     id: 'agoda',
     name: 'Agoda',
-    logo: '🏨',
+    logo: 'https://logos-world.net/wp-content/uploads/2021/02/Agoda-Logo.png',
     description: 'Premier accommodation booking platform in Asia',
     category: 'Travel'
   }
@@ -408,7 +408,7 @@ function App() {
                     
                     <div className="shop-card-body">
                       <div className="shop-logo">
-                        {shop.logo}
+                        <img src={shop.logo} alt={shop.name} />
                       </div>
                       <h3 className="shop-name">{shop.name}</h3>
                       <p className="shop-description">{shop.description}</p>
@@ -800,7 +800,7 @@ function App() {
               <div className="shop-header">
                 <div className="shop-header-content">
                   <div className="shop-header-logo">
-                    {SHOPS.find(s => s.id === currentView)?.logo}
+                    <img src={SHOPS.find(s => s.id === currentView)?.logo} alt={SHOPS.find(s => s.id === currentView)?.name} />
                   </div>
                   <div className="shop-header-info">
                     <h1 className="shop-header-title">{SHOPS.find(s => s.id === currentView)?.name}</h1>
@@ -875,19 +875,26 @@ function App() {
                       {cartItems.map(item => (
                         <div key={item.id} className="cart-item">
                           <div className="cart-item-info">
-                            <div className="cart-item-logo">{item.shopLogo}</div>
+                            <div className="cart-item-logo">
+                              <img src={item.shopLogo} alt={item.shopName} />
+                            </div>
                             <div className="cart-item-details">
                               <h3>{item.shopName} Gift Card</h3>
                               <p>Value: ${item.amount} USDT</p>
                             </div>
                           </div>
                           <div className="cart-item-price">${item.price} USDT</div>
-                          <button 
-                            onClick={() => removeFromCart(item.id)}
-                            className="remove-item-btn"
-                          >
-                            ✕
-                          </button>
+                          <div className="cart-item-actions">
+                            <button className="buy-now-btn">
+                              Buy Now
+                            </button>
+                            <button 
+                              onClick={() => removeFromCart(item.id)}
+                              className="remove-item-btn"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -905,15 +912,15 @@ function App() {
                       </div>
                       
                       <div className="cart-checkout-actions">
-                        <button className="checkout-all-btn">
-                          Checkout All Items
-                        </button>
                         <button 
                           onClick={() => setCurrentView('shop')} 
                           className="continue-shopping-btn"
                         >
                           Continue Shopping
                         </button>
+                        <div className="cart-info">
+                          <p>💡 Purchase items individually using the "Buy Now" buttons</p>
+                        </div>
                       </div>
                     </div>
                   </>

@@ -57,8 +57,56 @@ interface WalletInfo {
   network: string;
 }
 
+interface Shop {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  category: string;
+}
+
+const SHOPS: Shop[] = [
+  {
+    id: 'rakuten',
+    name: 'Rakuten',
+    logo: '🛒',
+    description: 'Japan\'s largest e-commerce platform with cashback rewards',
+    category: 'E-commerce'
+  },
+  {
+    id: 'shopee',
+    name: 'Shopee',
+    logo: '🛍️',
+    description: 'Southeast Asia\'s leading online shopping platform',
+    category: 'E-commerce'
+  },
+  {
+    id: 'coupang',
+    name: 'Coupang',
+    logo: '📦',
+    description: 'South Korea\'s largest online marketplace with fast delivery',
+    category: 'E-commerce'
+  },
+  {
+    id: 'klook',
+    name: 'Klook',
+    logo: '✈️',
+    description: 'Asia\'s leading platform for experiences and travel',
+    category: 'Travel'
+  },
+  {
+    id: 'agoda',
+    name: 'Agoda',
+    logo: '🏨',
+    description: 'Premier accommodation booking platform in Asia',
+    category: 'Travel'
+  }
+];
+
+const GIFT_CARD_AMOUNTS = [10, 50, 100, 200, 500];
+
 function App() {
-  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile'>('shop');
+  const [currentView, setCurrentView] = useState<'shop' | 'brand' | 'checkout' | 'payment' | 'orders' | 'profile' | 'rakuten' | 'shopee' | 'coupang' | 'klook' | 'agoda'>('shop');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
@@ -299,6 +347,37 @@ function App() {
                     <span className="promo-feature">🚀 Instant Delivery</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="section-header">
+                <h2 className="section-title">Shopping Categories</h2>
+                <span className="results-count">5 popular shopping platforms</span>
+              </div>
+
+              <div className="shops-grid">
+                {SHOPS.map(shop => (
+                  <div 
+                    key={shop.id} 
+                    className="shop-card"
+                    onClick={() => setCurrentView(shop.id as any)}
+                  >
+                    <div className="shop-card-header">
+                      <span className="shop-category">{shop.category}</span>
+                    </div>
+                    
+                    <div className="shop-card-body">
+                      <div className="shop-logo">
+                        {shop.logo}
+                      </div>
+                      <h3 className="shop-name">{shop.name}</h3>
+                      <p className="shop-description">{shop.description}</p>
+                      
+                      <button className="shop-select-btn">
+                        View Gift Cards →
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="section-header">
@@ -663,6 +742,57 @@ function App() {
                       <span className="stat-label">Total Cashback</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Shop Pages */}
+          {(['rakuten', 'shopee', 'coupang', 'klook', 'agoda'] as const).includes(currentView as any) && (
+            <div className="shop-detail">
+              <div className="breadcrumb">
+                <span onClick={() => setCurrentView('shop')}>Home</span>
+                <span className="breadcrumb-separator">/</span>
+                <span className="breadcrumb-current">{SHOPS.find(s => s.id === currentView)?.name}</span>
+              </div>
+
+              <div className="shop-header">
+                <div className="shop-header-content">
+                  <div className="shop-header-logo">
+                    {SHOPS.find(s => s.id === currentView)?.logo}
+                  </div>
+                  <div className="shop-header-info">
+                    <h1 className="shop-header-title">{SHOPS.find(s => s.id === currentView)?.name}</h1>
+                    <p className="shop-header-description">{SHOPS.find(s => s.id === currentView)?.description}</p>
+                    <div className="shop-header-badges">
+                      <span className="badge badge-discount">USDT Payment</span>
+                      <span className="badge badge-instant">Instant Delivery</span>
+                      <span className="badge badge-cashback">Secure</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="gift-cards-section">
+                <h2 className="section-title">Select Gift Card Amount</h2>
+                <div className="gift-cards-grid">
+                  {GIFT_CARD_AMOUNTS.map(amount => (
+                    <div key={amount} className="gift-card">
+                      <div className="gift-card-value">${amount} USDT</div>
+                      <div className="gift-card-price">
+                        <span className="price-label">Pay with</span>
+                        <span className="price-amount">${amount} USDT</span>
+                      </div>
+                      <div className="gift-card-actions">
+                        <button className="buy-gift-card-btn">
+                          Buy Gift Card
+                        </button>
+                        <button className="received-gift-card-btn">
+                          I've Received My Gift Card
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

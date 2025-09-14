@@ -132,6 +132,11 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [contractInitialized, setContractInitialized] = useState(false);
   const [pendingPurchases, setPendingPurchases] = useState<Map<string, string>>(new Map());
+  const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState(false);
+  const [successPurchaseData, setSuccessPurchaseData] = useState<{purchaseId: string, shopName: string, amount: number} | null>(null);
+  const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
+  const [showDeliveryConfirmedModal, setShowDeliveryConfirmedModal] = useState(false);
+  const [confirmedOrderData, setConfirmedOrderData] = useState<{shopName: string, amount: number} | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -323,30 +328,6 @@ function App() {
     );
   };
 
-  const confirmGiftCardDelivery = async (orderId: string) => {
-    try {
-      if (!contractInitialized) {
-        alert('Contract not initialized. Please reconnect your wallet.');
-        return;
-      }
-
-      setLoading(true);
-      console.log('Confirming gift card delivery for purchase ID:', orderId);
-      
-      // Call the smart contract to confirm delivery
-      await contractService.confirmGiftCardDelivery(orderId);
-      
-      // Update frontend status after successful blockchain confirmation
-      updateOrderStatus(orderId, 'received');
-      
-      alert('🎉 Gift card delivery confirmed on blockchain! Tokens have been sent to treasury.');
-    } catch (error: any) {
-      console.error('Failed to confirm delivery:', error);
-      alert(`❌ Failed to confirm delivery: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleConfirmGiftCardReceived = (orderId: string) => {
     setSelectedOrderId(orderId);
@@ -356,6 +337,9 @@ function App() {
   const confirmGiftCardReceived = async () => {
     if (selectedOrderId) {
       try {
+        // Get order details for the success modal
+        const order = userOrders.find(o => o.orderId === selectedOrderId);
+        
         // Call smart contract to confirm delivery
         if (contractInitialized) {
           await contractService.confirmGiftCardDelivery(selectedOrderId);
@@ -365,7 +349,15 @@ function App() {
         setUserOrders(prev => prev.filter(order => order.orderId !== selectedOrderId));
         setShowConfirmModal(false);
         setSelectedOrderId(null);
-        alert('Confirmed! Tokens have been sent to treasury and merchant. Transaction completed.');
+        
+        // Show success modal instead of alert
+        if (order) {
+          setConfirmedOrderData({
+            shopName: order.shopName,
+            amount: order.amount
+          });
+          setShowDeliveryConfirmedModal(true);
+        }
       } catch (error: any) {
         console.error('Failed to confirm delivery:', error);
         alert(`Failed to confirm delivery: ${error.message}`);
@@ -1104,11 +1096,15 @@ function App() {
                             <button 
                               className="buy-now-btn"
                               onClick={async () => {
+                                const itemId = item.id;
                                 try {
                                   if (!walletInfo) {
                                     alert('Please connect your wallet first');
                                     return;
                                   }
+                                  
+                                  // Set loading for this specific item
+                                  setLoadingItems(prev => new Set(prev).add(itemId));
                                   
                                   // Call smart contract to buy gift card
                                   const purchaseId = await buyGiftCardOnChain(item.shopId, item.amount);
@@ -1116,15 +1112,28 @@ function App() {
                                   // Remove item from cart after successful purchase
                                   removeFromCart(item.id);
                                   
-                                  alert(`🎉 Gift card purchased successfully! Purchase ID: ${purchaseId.slice(0, 10)}... Check your orders page.`);
+                                  // Show success modal instead of alert
+                                  setSuccessPurchaseData({
+                                    purchaseId,
+                                    shopName: item.shopName,
+                                    amount: item.amount
+                                  });
+                                  setShowPurchaseSuccessModal(true);
                                 } catch (error: any) {
                                   console.error('Purchase failed:', error);
                                   alert(`❌ Purchase failed: ${error.message}`);
+                                } finally {
+                                  // Remove loading for this specific item
+                                  setLoadingItems(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(itemId);
+                                    return newSet;
+                                  });
                                 }
                               }}
-                              disabled={loading}
+                              disabled={loadingItems.has(item.id)}
                             >
-                              {loading ? 'Processing...' : 'Buy Now'}
+                              {loadingItems.has(item.id) ? 'Processing...' : 'Buy Now'}
                             </button>
                             <button 
                               onClick={() => removeFromCart(item.id)}
@@ -1149,6 +1158,15 @@ function App() {
                         </div>
                       </div>
                       
+                      <div className="process-explanation compact">
+                        <h4>📋 How it works:</h4>
+                        <div className="process-steps">
+                          <span>1. Buy with tokens</span>
+                          <span>2. Track in Orders</span>
+                          <span>3. Confirm delivery</span>
+                        </div>
+                      </div>
+                      
                       <div className="cart-checkout-actions">
                         <button 
                           onClick={() => setCurrentView('shop')} 
@@ -1156,9 +1174,6 @@ function App() {
                         >
                           Continue Shopping
                         </button>
-                        <div className="cart-info">
-                          <p>💡 Purchase items individually using the "Buy Now" buttons</p>
-                        </div>
                       </div>
                     </div>
                   </>
@@ -1249,6 +1264,139 @@ function App() {
                 onClick={confirmGiftCardReceived}
               >
                 Yes, I've received my gift card
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Purchase Success Modal */}
+      {showPurchaseSuccessModal && successPurchaseData && (
+        <div className="modal-overlay">
+          <div className="modal-content purchase-success-modal">
+            <div className="modal-header">
+              <h3>🎉 Purchase Successful!</h3>
+              <button 
+                className="modal-close"
+                onClick={() => {
+                  setShowPurchaseSuccessModal(false);
+                  setSuccessPurchaseData(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="success-content">
+                <div className="success-icon">✅</div>
+                <h4>Your gift card purchase was successful!</h4>
+                
+                <div className="purchase-details">
+                  <div className="detail-item">
+                    <span className="label">Shop:</span>
+                    <span className="value">{successPurchaseData.shopName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">Amount:</span>
+                    <span className="value">${successPurchaseData.amount} USDT</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">Purchase ID:</span>
+                    <span className="value purchase-id">{successPurchaseData.purchaseId.slice(0, 16)}...</span>
+                  </div>
+                </div>
+
+                <div className="next-steps">
+                  <h5>📝 Next Steps:</h5>
+                  <div className="steps-list">
+                    <div className="step-item">
+                      <span className="step-number">1</span>
+                      <span>Go to your <strong>Orders</strong> page to track the delivery</span>
+                    </div>
+                    <div className="step-item">
+                      <span className="step-number">2</span>
+                      <span>Wait for the gift card to be delivered</span>
+                    </div>
+                    <div className="step-item">
+                      <span className="step-number">3</span>
+                      <span>Click <strong>"I've Received My Gift Card"</strong> to confirm delivery</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="modal-btn secondary"
+                onClick={() => {
+                  setShowPurchaseSuccessModal(false);
+                  setSuccessPurchaseData(null);
+                }}
+              >
+                Continue Shopping
+              </button>
+              <button 
+                className="modal-btn primary"
+                onClick={() => {
+                  setShowPurchaseSuccessModal(false);
+                  setSuccessPurchaseData(null);
+                  setCurrentView('orders');
+                }}
+              >
+                View Orders
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Confirmed Modal */}
+      {showDeliveryConfirmedModal && confirmedOrderData && (
+        <div className="modal-overlay">
+          <div className="modal-content delivery-confirmed-modal">
+            <div className="modal-header">
+              <h3>✅ Delivery Confirmed!</h3>
+              <button 
+                className="modal-close"
+                onClick={() => {
+                  setShowDeliveryConfirmedModal(false);
+                  setConfirmedOrderData(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="success-content">
+                <div className="success-icon">🎉</div>
+                <h4>Thank you for confirming your gift card delivery!</h4>
+                
+                <div className="confirmation-details">
+                  <div className="detail-item">
+                    <span className="label">Shop:</span>
+                    <span className="value">{confirmedOrderData.shopName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">Amount:</span>
+                    <span className="value">${confirmedOrderData.amount} USDT</span>
+                  </div>
+                </div>
+
+                <div className="confirmation-info">
+                  <p>✨ Your tokens have been successfully transferred to the treasury</p>
+                  <p>🎁 Enjoy your gift card!</p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="modal-btn primary"
+                onClick={() => {
+                  setShowDeliveryConfirmedModal(false);
+                  setConfirmedOrderData(null);
+                }}
+              >
+                Perfect!
               </button>
             </div>
           </div>

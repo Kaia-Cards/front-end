@@ -1,18 +1,10 @@
 {
-  "builds": [
-    {
-      "src": "mini-dapp.html",
-      "use": "@vercel/static-build",
-      "config": {
-        "buildCommand": "npm run build:mini",
-        "outputDirectory": "dist-mini"
-      }
-    }
-  ],
+  "buildCommand": "npm run build:mini",
+  "outputDirectory": "dist-mini",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/mini-dapp.html"
+      "dest": "/index.html"
     }
   ],
   "env": {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useKaiaWalletSdk } from '../hooks/useKaiaWallet';
+import { useKaiaWalletSdkStore } from '../hooks/useKaiaWallet';
 import { ethers } from 'ethers';
 
 interface PaymentPageProps {
@@ -18,9 +18,16 @@ export const PaymentPage = ({ order, navigate }: PaymentPageProps) => {
 
   const connectWallet = async () => {
     try {
-      const { requestAccount } = useKaiaWalletSdk();
-      const address = await requestAccount();
-      setWalletAddress(address);
+      const { sdk } = useKaiaWalletSdkStore();
+      if (!sdk) {
+        console.error('Wallet SDK not initialized');
+        return;
+      }
+      const walletProvider = sdk.getWalletProvider();
+      const addresses = await walletProvider.request({ method: 'kaia_requestAccounts' });
+      if (addresses && addresses.length > 0) {
+        setWalletAddress(addresses[0]);
+      }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
     }
@@ -35,7 +42,11 @@ export const PaymentPage = ({ order, navigate }: PaymentPageProps) => {
     setPaymentStatus('processing');
 
     try {
-      const { sendTransaction } = useKaiaWalletSdk();
+      const { sdk } = useKaiaWalletSdkStore();
+      if (!sdk) {
+        throw new Error('Wallet SDK not initialized');
+      }
+      const walletProvider = sdk.getWalletProvider();
 
       const paymentAmount = ethers.parseEther(order.price.toString());
       const gasPrice = ethers.parseUnits('250', 'gwei');
@@ -47,7 +58,7 @@ export const PaymentPage = ({ order, navigate }: PaymentPageProps) => {
         gas: '21000',
       };
 
-      await sendTransaction([tx]);
+      await walletProvider.request({ method: 'kaia_sendTransaction', params: [tx] });
 
       setPaymentStatus('completed');
       setTxHash('0x' + Math.random().toString(16).substr(2, 64));

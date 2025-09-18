@@ -1,17 +1,24 @@
 import { useState } from 'react';
 import { useLiff } from '../hooks/useLiff';
-import { useKaiaWalletSdk } from '../hooks/useKaiaWallet';
+import { useKaiaWalletSdkStore } from '../hooks/useKaiaWallet';
 
 export const Header = () => {
   const { liffUser, isLoggedIn } = useLiff();
   const [showMenu, setShowMenu] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);
+  const { sdk } = useKaiaWalletSdkStore();
 
   const connectWallet = async () => {
     try {
-      const { requestAccount } = useKaiaWalletSdk();
-      await requestAccount();
-      setWalletConnected(true);
+      if (!sdk) {
+        console.error('Wallet SDK not initialized');
+        return;
+      }
+      const walletProvider = sdk.getWalletProvider();
+      const addresses = await walletProvider.request({ method: 'kaia_requestAccounts' });
+      if (addresses && addresses.length > 0) {
+        setWalletConnected(true);
+      }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
     }

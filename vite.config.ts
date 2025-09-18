@@ -14,9 +14,7 @@ export default defineConfig(({ mode }) => {
       outDir: isMiniDapp ? 'dist-mini' : 'dist',
       emptyOutDir: true,
       rollupOptions: isMiniDapp ? {
-        input: {
-          main: path.resolve(__dirname, 'mini-dapp.html'),
-        },
+        input: path.resolve(__dirname, 'mini-dapp.html'),
       } : undefined,
     },
     resolve: {

@@ -2,7 +2,7 @@
 
 ## TL,DR
 
-Interface for KSHOP which is a digital gift card marketplace on Kaia Network with USDT & LINE integration. Our users can get gift cards from Asian brands using USDT payments.
+Interface for KSHOP which is our digital gift card marketplace on Kaia Network with USDT & LINE integration. Our users can get gift cards from Asian brands using USDT payments.
 
 ## Project Architecture
 

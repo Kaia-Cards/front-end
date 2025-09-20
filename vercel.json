@@ -10,6 +10,6 @@
   "env": {
     "VITE_LIFF_ID": "2008107509-1kq9JJmd",
     "VITE_KAIA_CHAIN_ID": "8217",
-    "VITE_API_URL": "https://api.kaiacards.com"
+    "VITE_API_URL": ""
   }
 }

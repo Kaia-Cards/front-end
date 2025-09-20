@@ -6,7 +6,7 @@ import { ShopId, FrontendAmount } from './contracts/contractConfig';
 import { lineService, LineProfile } from './services/lineService';
 import { lineIntegration, LinePurchaseNotification } from './services/lineIntegration';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface Brand {
   id: string;
@@ -186,6 +186,12 @@ function App() {
   }, []);
 
   const fetchBrands = async () => {
+    if (!API_BASE) {
+      console.log('No API URL configured, using fallback data');
+      setBrands(SHOPS);
+      return;
+    }
+
     try {
       console.log('Fetching brands from:', `${API_BASE}/brands`);
       const response = await fetch(`${API_BASE}/brands`);
@@ -196,6 +202,8 @@ function App() {
       console.log(`Loaded ${data.length} brands`);
     } catch (error) {
       console.error('Error fetching brands:', error);
+      console.log('Using fallback SHOPS data');
+      setBrands(SHOPS);
     }
   };
 

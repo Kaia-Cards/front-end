@@ -1,10 +1,10 @@
 {
-  "buildCommand": "npm run build:mini",
-  "outputDirectory": "dist-mini",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/mini-dapp.html"
+      "dest": "/index.html"
     }
   ],
   "env": {

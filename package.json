@@ -26,7 +26,7 @@
   "scripts": {
     "dev": "vite",
     "dev:mini": "vite --mode mini-dapp",
-    "build": "vite build --mode mini-dapp",
+    "build": "vite build",
     "build:mini": "vite build --mode mini-dapp",
     "preview": "vite preview"
   },

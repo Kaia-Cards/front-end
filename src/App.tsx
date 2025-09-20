@@ -3,6 +3,8 @@ import './App.css';
 import { WalletConnect } from '../components/WalletConnect';
 import { contractService } from './contracts/contractService';
 import { ShopId, FrontendAmount } from './contracts/contractConfig';
+import { lineService, LineProfile } from './services/lineService';
+import { lineIntegration, LinePurchaseNotification } from './services/lineIntegration';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -145,6 +147,8 @@ function App() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [contractInitialized, setContractInitialized] = useState(false);
+  const [lineProfile, setLineProfile] = useState<LineProfile | null>(null);
+  const [isLineInitialized, setIsLineInitialized] = useState(false);
   const [pendingPurchases, setPendingPurchases] = useState<Map<string, string>>(new Map());
   const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState(false);
   const [successPurchaseData, setSuccessPurchaseData] = useState<{purchaseId: string, shopName: string, amount: number} | null>(null);
@@ -156,6 +160,29 @@ function App() {
 
   useEffect(() => {
     fetchBrands();
+  }, []);
+
+  useEffect(() => {
+    const initializeLine = async () => {
+      try {
+        await lineService.initialize();
+        setIsLineInitialized(true);
+
+        if (lineService.isLoggedIn()) {
+          const profile = await lineService.getProfile();
+          setLineProfile(profile);
+          setWalletInfo({
+            address: profile.userId,
+            balance: '0',
+            network: 'LINE'
+          });
+        }
+      } catch (error) {
+        console.error('LINE initialization failed:', error);
+      }
+    };
+
+    initializeLine();
   }, []);
 
   const fetchBrands = async () => {
@@ -236,7 +263,7 @@ function App() {
 
   const handlePaymentConfirmed = async (txHash: string) => {
     if (!currentOrder) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/order/${currentOrder.orderId}/pay`, {
@@ -244,10 +271,21 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txHash })
       });
-      
+
       if (response.ok) {
         const updatedOrder = await response.json();
         setCurrentOrder(updatedOrder);
+
+        if (lineProfile) {
+          const purchaseNotification: LinePurchaseNotification = {
+            orderId: updatedOrder.orderId,
+            shopName: updatedOrder.brand || 'Gift Card',
+            amount: updatedOrder.value || 0,
+            price: updatedOrder.price || 0
+          };
+          await lineIntegration.sendPurchaseConfirmation(purchaseNotification);
+        }
+
         alert('Payment confirmed! Your gift card code will be delivered shortly.');
         setCurrentView('orders');
         fetchUserOrders();
@@ -273,14 +311,44 @@ function App() {
 
   const handleWalletChange = async (wallet: WalletInfo | null) => {
     setWalletInfo(wallet);
-    
-    // Initialize contract when wallet is connected
+
     if (wallet && !contractInitialized) {
       try {
         await initializeContract();
       } catch (error) {
         console.error('Failed to initialize contract on wallet connect:', error);
       }
+    }
+  };
+
+  const handleLineAuth = async () => {
+    try {
+      const profile = await lineService.login();
+      setLineProfile(profile);
+      setWalletInfo({
+        address: profile.userId,
+        balance: '0',
+        network: 'LINE'
+      });
+
+      await lineIntegration.sendWelcomeMessage();
+      await lineIntegration.setupRichMenu();
+
+      console.log('LINE authentication successful:', profile.displayName);
+    } catch (error) {
+      console.error('LINE authentication failed:', error);
+      if (error.message !== 'Redirecting to LINE login') {
+        alert('Failed to authenticate with LINE. Please try again.');
+      }
+    }
+  };
+
+  const handleLineShare = async () => {
+    try {
+      await lineService.shareTargetPicker('Check out KaiaCards - Premium gift cards with crypto payments! 🎁💳');
+    } catch (error) {
+      console.error('LINE share failed:', error);
+      alert('Failed to share to LINE. Please try again.');
     }
   };
 
@@ -341,14 +409,28 @@ function App() {
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status'], cardCode?: string) => {
-    setUserOrders(prev => 
-      prev.map(order => 
-        order.orderId === orderId 
+  const updateOrderStatus = async (orderId: string, status: Order['status'], cardCode?: string) => {
+    setUserOrders(prev =>
+      prev.map(order =>
+        order.orderId === orderId
           ? { ...order, status, card_code: cardCode || order.card_code }
           : order
       )
     );
+
+    if (lineProfile && status === 'delivered') {
+      const order = userOrders.find(o => o.orderId === orderId);
+      if (order) {
+        const deliveryNotification: LinePurchaseNotification = {
+          orderId: order.orderId,
+          shopName: order.shopName,
+          amount: order.amount,
+          price: order.price,
+          cardCode: cardCode
+        };
+        await lineIntegration.sendCardDelivery(deliveryNotification);
+      }
+    }
   };
 
 
@@ -525,10 +607,10 @@ function App() {
               
               <div className="nav-info">
                 <span className="nav-info-item">
-                  <span className="info-icon">⚡</span> Instant Delivery
+                  <span className="info-icon">⚡</span> Flash Delivery
                 </span>
                 <span className="nav-info-item">
-                  <span className="info-icon">🔒</span> Secure Payment
+                  <span className="info-icon">🔒</span> Safe Payment
                 </span>
                 <span className="nav-info-item">
                   <span className="info-icon">💰</span> Best Prices
@@ -547,53 +629,62 @@ function App() {
                 <div className="shop-header-content">
                   <div className="shop-hero">
                     <div className="shop-hero-left">
-                      <h1 className="shop-title">Kaia Gift Cards</h1>
-                      <p className="shop-tagline">Discover amazing gift cards from top brands worldwide</p>
+                      <h1 className="shop-title">Premium Digital Gift Cards</h1>
+                      <p className="shop-tagline">Access thousands of gift cards from Asian global brands with Kaia USDT payments</p>
                       <div className="shop-highlights">
                         <div className="highlight-item">
-                          <span className="highlight-icon">💳</span>
+                          <span className="highlight-icon">🔐</span>
                           <div className="highlight-text">
-                            <strong>Secure Payments</strong>
-                            <span>Pay with USDT tokens</span>
+                            <strong>Kaia Blockchain</strong>
+                            <span>USDT payments on Kaia network</span>
                           </div>
                         </div>
                         <div className="highlight-item">
                           <span className="highlight-icon">⚡</span>
                           <div className="highlight-text">
-                            <strong>Instant Delivery</strong>
-                            <span>Get your codes immediately</span>
+                            <strong>Flash Delivery</strong>
+                            <span>Digital codes delivered within minutes</span>
                           </div>
                         </div>
                         <div className="highlight-item">
-                          <span className="highlight-icon">🛡️</span>
+                          <span className="highlight-icon">✓</span>
                           <div className="highlight-text">
-                            <strong>100% Guaranteed</strong>
-                            <span>Verified and authentic cards</span>
+                            <strong>Verified Partners</strong>
+                            <span>Authentic cards from authorized retailers</span>
                           </div>
                         </div>
                       </div>
-                      <button className="line-integration-btn">
-                        LINE Integration
-                      </button>
+                      <div className="cta-buttons">
+                        <button className="line-integration-btn" onClick={() => handleLineAuth()}>
+                          <span className="line-logo">📱</span>
+                          {lineProfile ? `Connected: ${lineProfile.displayName}` : 'LINE Integration'}
+                        </button>
+                        {lineProfile && (
+                          <button className="line-share-btn" onClick={() => handleLineShare()}>
+                            <span className="line-logo">📱</span>
+                            Share to LINE
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="shop-hero-right">
                       <div className="hero-stats">
                         <div className="stat-card">
-                          <div className="stat-number">50+</div>
-                          <div className="stat-label">Brands Available</div>
+                          <div className="stat-number">100+</div>
+                          <div className="stat-label">Global Brands</div>
                         </div>
                         <div className="stat-card">
-                          <div className="stat-number">$USDT Payment</div>
+                          <div className="stat-number">200+</div>
+                          <div className="stat-label">Testnet Cards Sold</div>
                         </div>
                         <div className="stat-card">
                           <div className="stat-number">99.9%</div>
-                          <div className="stat-label">Uptime</div>
+                          <div className="stat-label">Kaia Uptime</div>
                         </div>
                       </div>
                       <div className="hero-features">
-                        <div className="feature-badge"> Up to 10% Discount</div>
-                        <div className="feature-badge">1% Cashback Rewards</div>
-                        <div className="feature-badge"> Limited Time Offers</div>
+                        <div className="feature-badge">Up to 15% Savings</div>
+                        <div className="feature-badge">No Hidden Fees</div>
                       </div>
                     </div>
                   </div>
@@ -640,8 +731,6 @@ function App() {
               </div>
 
               <div className="section-header">
-                <h2 className="section-title">Popular Brands</h2>
-                <span className="results-count">{filteredBrands.length} brands available (total: {brands.length})</span>
               </div>
 
               <div className="brands-grid">
@@ -836,6 +925,24 @@ function App() {
                   </div>
                 </div>
 
+                <div className="payment-methods">
+                  {lineProfile && (
+                    <div className="payment-method">
+                      <button
+                        className="line-pay-btn"
+                        onClick={() => lineIntegration.requestLinePayment(currentOrder.payment.amount)}
+                      >
+                        <span className="line-logo">📱</span>
+                        Pay with LINE Pay
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="payment-divider">
+                    <span>Or pay with crypto</span>
+                  </div>
+                </div>
+
                 <div className="payment-content">
                   <div className="payment-qr">
                     <div className="qr-placeholder">
@@ -992,12 +1099,20 @@ function App() {
                           )}
                           
                           <div className="order-card-actions">
-                            <button 
+                            <button
                               className="order-action-btn secondary"
                               onClick={() => handleConfirmGiftCardReceived(order.orderId)}
                             >
                               ✅ I've received my gift card
                             </button>
+                            {lineProfile && (
+                              <button
+                                className="order-action-btn line-share"
+                                onClick={() => lineIntegration.shareOrder(order.orderId, order.shopName, order.amount)}
+                              >
+                                📱 Share to LINE
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1261,27 +1376,12 @@ function App() {
             </div>
             
             <div className="footer-section">
-              <h4 className="footer-subtitle">Quick Links</h4>
-              <ul className="footer-links">
-                <li><a href="#" onClick={() => setCurrentView('shop')}>Shop</a></li>
-                <li><a href="#" onClick={() => setCurrentView('orders')}>Orders</a></li>
-                <li><a href="#" onClick={() => setCurrentView('profile')}>Profile</a></li>
-              </ul>
-            </div>
-            
-            <div className="footer-section">
               <h4 className="footer-subtitle">Payment</h4>
-              <p className="footer-text">Secure USDT payments on Kaia network</p>
+              <p className="footer-text">USDT payments on Kaia network</p>
               <div className="payment-badges">
                 <span className="badge">USDT</span>
                 <span className="badge">Kaia</span>
               </div>
-            </div>
-            
-            <div className="footer-section">
-              <h4 className="footer-subtitle">Support</h4>
-              <p className="footer-text">24/7 Customer Support</p>
-              <p className="footer-text">support@kaiacards.com</p>
             </div>
           </div>
           

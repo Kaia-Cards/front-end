@@ -737,45 +737,6 @@ function App() {
                   </div>
                 ))}
               </div>
-
-              <div className="section-header">
-              </div>
-
-              <div className="brands-grid">
-                {filteredBrands.map(brand => (
-                  <div 
-                    key={brand.id} 
-                    className="brand-card"
-                    onClick={() => selectBrand(brand)}
-                  >
-                    <div className="brand-card-header">
-                      <span className="brand-discount">{brand.discount}% OFF</span>
-                      {brand.available && <span className="brand-available">Available</span>}
-                    </div>
-                    
-                    <div className="brand-card-body">
-                      <div className="brand-logo">
-                        <img src={brand.logo} alt={brand.name} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
-                      </div>
-                      <h3 className="brand-name">{brand.name}</h3>
-                      <p className="brand-description">{brand.description}</p>
-                      
-                      <div className="brand-meta">
-                        <span className="brand-category">{brand.category}</span>
-                        <span className="brand-country">{brand.country}</span>
-                      </div>
-                      
-                      <div className="brand-range">
-                        ${brand.minValue} - ${brand.maxValue}
-                      </div>
-                      
-                      <button className="brand-select-btn">
-                        View Cards →
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </>
           )}
 
